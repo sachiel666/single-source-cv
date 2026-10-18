@@ -66,7 +66,7 @@ python build.py list                             # profiles with descriptions
 1. `load_data()` merges all `data/*.yml` (duplicate top-level keys are an error).
 2. `Resolver(channel, lang, include_internal)` picks languages and channel variants, drops items that do not belong to the channel or are internal, and formats dates.
 3. **md:** channel `web`, one language; every `templates/*.md.j2` is rendered with the resolved data plus `labels` and `lang`. Jinja delimiters are `<< var >>`, `<% block %>`, `<# comment #>` so Liquid (`{{ }}`, `{% %}`) passes through. A markdown hard line break is written `<< br >>` because editors strip trailing spaces. Undefined variables raise errors (`StrictUndefined`).
-4. **pdf:** channel `pdf`; the profile's `filters` (`include_tags`, `exclude_tags`, `ids`, `max`) apply to top-level lists; text is converted to Typst markup → `out/_resolved_<profile>_<lang>.json` → `templates/cv.typ` reads it via `sys.inputs.data`. If the profile has `publish_as`, the PDF is also copied to `out/<publish_as>`.
+4. **pdf:** channel `pdf`; the profile's `filters` (`include_tags`, `exclude_tags`, `ids`, `max`) apply to top-level lists (an unknown id in `ids` prints a warning); text is converted to Typst markup → `out/_resolved_<profile>_<lang>.json` → `templates/cv.typ` reads it via `sys.inputs.data`. If the profile has `publish_as`, the PDF is also copied to `out/<publish_as>`.
 
 ## PDF template and profiles
 

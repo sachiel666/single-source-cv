@@ -214,6 +214,9 @@ def apply_filters(data: dict, filters: dict) -> dict:
         rules = rules or {}
         if "ids" in rules:
             by_id = {it.get("id"): it for it in items}
+            for i in rules["ids"]:
+                if i not in by_id:  # typo or a dropped item: warn instead of silently skipping it
+                    print(f"  warning: filters.{section}.ids: no item with id '{i}'")
             items = [by_id[i] for i in rules["ids"] if i in by_id]
         if "include_tags" in rules:
             want = set(rules["include_tags"])

@@ -2,16 +2,7 @@
 
 **One YAML file → your website CV page + several tailored PDF CVs, in several languages.**
 
-Keep your whole CV in one place (`data/cv.yml`) and generate from it:
-
-- **Website markdown** (`out/cv.md`) for GitHub Pages / Jekyll or any static site. Liquid tags pass through untouched.
-- **PDF CVs** via [Typst](https://typst.app/), one per **profile** × **language**: a full CV, a one-page CV, a plain one-column **ATS-friendly** CV, a project-focused CV for tenders …
-- An **internal** variant with real client names for company CV systems, while the public outputs say "Private Company (NDA)".
-- A **job fit analysis** with your coding agent: drop a job ad into `jobs/<slug>/`, get a requirement-by-requirement match against your CV with gaps and suggestions, and optionally a CV tailored to that job.
-
-The same entry can say things differently per channel (emojis on the web, a tighter paragraph in the PDF), and profiles pick sections, order, filters, and style. The example data is a fictional *Matti Meikäläinen*.
-
-<p align="center"><img src="docs/images/workflow.png" alt="cv.yml is built by build.py into PDF CVs, a website CV and an internal CV; an AI agent compares cv.yml with a job ad into a job fit analysis and a tailored CV" width="480"></p>
+Keep your whole CV in one place (`data/cv.yml`), edit only that, and generate everything else from it with one command. The example data is a fictional *Matti Meikäläinen*.
 
 | Full (sidebar) | ATS (one column) | One page (fi) | Internal |
 |---|---|---|---|
@@ -19,7 +10,79 @@ The same entry can say things differently per channel (emojis on the web, a tigh
 
 > This is a template repository, published as-is. It is not actively maintained. Fork, copy, and change anything; issues and PRs are welcome but support is not promised.
 
-## Quick start
+## 💡 Features
+
+- 📝 **One source of truth:** the whole CV in one YAML file; nothing is copied by hand between the website and the PDFs.
+- 📄 **PDF CVs with [Typst](https://typst.app/)**, one per **profile** × **language**: full, one-page, a plain one-column **ATS-friendly** CV, a project-focused CV for tenders … Add your own profiles.
+- 🌐 **Website CV page** as markdown for GitHub Pages / Jekyll or any static site; Liquid tags pass through untouched.
+- 🎛️ **Profiles pick the content:** sections and their order, items by `id` or tags, headings, colours and sizes. The same background can be shown condensed or detailed.
+- 🗣️ **Multilingual:** `{en: ..., fi: ...}` in the data; add a language by adding one block to `labels.yml`.
+- 🔀 **Channel variants:** the same entry can say things differently on the website and in the PDF (e.g. emojis only on the web).
+- 🔒 **Internal variant:** real client names for company CV systems, while the public outputs say "Private Company (NDA)".
+- 🎯 **Job fit analysis with your coding agent:** drop a job ad into `jobs/<slug>/` and get a requirement-by-requirement match with gaps, missing ATS keywords and suggestions, and optionally a CV tailored to that job.
+- 🧠 **Notes:** facts you confirm to the agent are kept next to the CV item (never rendered), so you are not asked the same thing twice.
+- ⚙️ **CI included:** a GitHub Action builds the public PDFs on every push and never includes internal profiles.
+
+## ⚙️ How it works
+
+```mermaid
+flowchart TD
+    data["📝 data/cv.yml<br/>one source of truth"]
+    build["⚙️ build.py<br/>all profiles & languages"]
+    pdf["📄 PDF CVs<br/>full · one-page · ATS · projects"]
+    web["🌐 Website CV<br/>markdown"]
+    internal["🔒 Internal CV<br/>real client names"]
+    ad["📰 Job ad"]
+    agent["🤖 Coding agent<br/>job-fit skill"]
+    fit["🎯 Job fit analysis<br/>+ tailored profile"]
+    portals["📋 LinkedIn &<br/>company CV portals"]
+
+    data -- "one command" --> build
+    build --> pdf
+    build --> web
+    build --> internal
+    data --> agent
+    ad --> agent
+    agent --> fit
+    fit -- "profile.yml" --> build
+    agent -. "your answers → notes" .-> data
+    data -. "copy the essentials" .-> portals
+```
+
+1. You edit `data/cv.yml` (and optional extra `data/*.yml` files).
+2. `build.py` resolves languages, channel variants and internal fields, applies each profile's filters, and renders the website markdown (Jinja2) and the PDFs (Typst).
+3. For a job application, the agent compares the CV with the ad, writes a fit analysis, and can write a tailored profile that `build.py` turns into a PDF.
+
+## 💼 Use cases
+
+- A **consultant** keeping several CV versions in sync: website, full PDF, one-pager, tender CV and the company's internal CV system.
+- Keeping the **website and the PDF CV** consistent without copy-paste.
+- **Applying for jobs:** an ATS-friendly CV, an honest gap analysis per ad, and a CV tailored to the role.
+- **Bilingual CVs** (e.g. English and Finnish) from the same data.
+- A starting point for your own **CV-as-code** setup that a coding agent can maintain safely.
+
+## 🛠️ Tech stack
+
+- **Python 3.10+** with **Jinja2** (website markdown) and **PyYAML** (data)
+- **Typst** for the PDFs, from the `typst` pip package (no separate install)
+- **GitHub Actions** for CI builds
+- Optional: a **coding agent** such as [Claude Code](https://claude.com/claude-code) for the job fit analysis (instructions in `AGENTS.md` and `.claude/skills/`)
+
+## 🗂️ Project structure
+
+```
+data/cv.yml            ← the CV content (the only place content is edited)
+templates/cv.md.j2     ← website page (Jinja2)
+templates/cv.typ       ← PDF template (Typst)
+templates/labels.yml   ← headings and date words per language
+profiles/*.yml         ← PDF profiles: layout, filters, labels, style
+jobs/<slug>/           ← job ads, fit analyses and tailored profiles
+.claude/skills/job-fit ← agent instructions for the job fit analysis
+build.py               ← the generator
+AGENTS.md              ← conventions for agents and humans
+```
+
+## 🚀 Quick start
 
 Requires Python 3.10+. Typst comes from the `typst` pip package, so no separate install is needed.
 
@@ -38,7 +101,7 @@ python build.py list                 # profiles and what they are for
 
 `--png` writes page previews `out/preview_*.png`. Look at them after every layout change (page count, overflow, sidebar spilling to the next page).
 
-## Job fit analysis and tailored CVs
+## 🎯 Job fit analysis and tailored CVs
 
 ```
 jobs/acme-senior-data-engineer/
@@ -54,7 +117,7 @@ jobs/acme-senior-data-engineer/
 
 See [jobs/example-energy-lead-data-engineer/](jobs/example-energy-lead-data-engineer/) for a worked example with a fictional ad. Your own `jobs/` folders are gitignored in this template; in a private repository you can track them (see `.gitignore`).
 
-## Privacy and AI agents
+## 🔐 Privacy and AI agents
 
 This repository is designed to be used with a coding agent (Claude Code, Codex …). That is convenient, but you should know what it means for your data, especially for internal information (`internal: true` items, `*_internal` fields such as real client names).
 
@@ -72,7 +135,7 @@ This repository is designed to be used with a coding agent (Claude Code, Codex �
 
 The same applies to `jobs/`: job ads are public, but your answers to the agent's questions end up in `notes` and in `fit.md`. And independent of AI: keep a repository with internal data private (see "Make it yours" below).
 
-## Make it yours (after cloning)
+## ✏️ Make it yours (after cloning)
 
 Use **"Use this template"** on GitHub (a fresh repository without this history), or clone and re-initialise git. Then go through this list.
 
@@ -81,7 +144,7 @@ Use **"Use this template"** on GitHub (a fresh repository without this history),
 - If your data will contain anything internal (real client names, `internal: true` items), **make your repository private**. The whole point of `*_internal` fields is that they live next to the public text in the same file.
 - Keep internal PDFs out of anything public. The included GitHub Action runs `build.py all --skip-internal` for this reason: workflow artifacts can be downloaded by anyone with read access.
 - Your git history keeps everything you ever committed. If you later want to publish your own repo, start a new one rather than flipping a private repo with history to public.
-- If you use a coding agent, it can read your internal data and sends what it reads to the model provider; see [Privacy and AI agents](#privacy-and-ai-agents) before adding anything sensitive.
+- If you use a coding agent, it can read your internal data and sends what it reads to the model provider; see [Privacy and AI agents](#-privacy-and-ai-agents) before adding anything sensitive.
 
 ### 2. Replace the data (`data/cv.yml`)
 
@@ -135,7 +198,7 @@ Use **"Use this template"** on GitHub (a fresh repository without this history),
 - Update `LICENSE` (copyright holder) if you redistribute your own version.
 - `AGENTS.md` is written for AI coding agents (Claude Code, Codex …) and humans alike; keep it up to date when you change conventions, and the agent will follow them.
 
-## Checking an ATS PDF
+## ✅ Checking an ATS PDF
 
 ```bash
 pip install pypdf
@@ -144,6 +207,6 @@ python -c "from pypdf import PdfReader; print('\n'.join(p.extract_text() for p i
 
 The text should come out in reading order with whole words and recognisable section headings.
 
-## License
+## ⚖️ License
 
 Code: MIT (see `LICENSE`). Font: Poppins, SIL Open Font License 1.1 (see `fonts/OFL.txt`).
